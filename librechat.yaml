@@ -1,0 +1,4 @@
+# GXEON Command Center — LibreChat configuration
+# Minimal bootstrap config; provider endpoints and MCP tools are added in reviewed follow-up changes.
+version: 1.3.19
+cache: true
