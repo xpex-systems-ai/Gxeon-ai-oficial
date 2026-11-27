@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Activity, Bot, BrainCircuit, CheckCircle2, CircleDot, Command, GitBranch, ShieldCheck, Workflow, Zap, Database, Server, Plug, ArrowUpRight, Menu, Search, Bell, Plus, ChevronRight } from "lucide-react";
 
 const agents = [
@@ -16,6 +16,8 @@ const modules = [
 export default function Home() {
   const [tab,setTab] = useState("Visão geral");
   const [query,setQuery] = useState("");
+  const [apiState,setApiState] = useState<"checking"|"online"|"offline">("checking");
+  useEffect(() => { fetch("https://gxeon-core-api-production.up.railway.app/v1/status").then(r => { if (!r.ok) throw new Error("API unavailable"); return r.json(); }).then(() => setApiState("online")).catch(() => setApiState("offline")); }, []);
   return <main className="shell">
     <aside className="sidebar">
       <div className="brand"><div className="brand-mark"><Command size={21}/></div><div><b>GXEON</b><small> XPeX SYSTEMS AI</small></div></div>
@@ -30,7 +32,7 @@ export default function Home() {
         <div className="eyebrow"><span/> SISTEMA OPERACIONAL DE AGENTES</div>
         <div className="hero-row"><div><h1>{tab === "Visão geral" ? "Centro de comando." : tab + "."}</h1><p>Inteligência conectada. Execução governada. Resultados comprováveis.</p></div><button className="primary" onClick={()=>setTab("Agentes")}><Plus size={16}/> Novo agente</button></div>
         <div className="banner"><div className="banner-icon"><Zap size={20}/></div><div><b>GXEON Native está em construção</b><p>Esta é a primeira interface operacional. Os conectores e runtimes serão ativados após validação de cada serviço.</p></div><span className="tag">FOUNDATION</span></div>
-        <div className="section-head"><div><h2>Infraestrutura</h2><p>Camadas previstas para a operação GXEON</p></div><span className="muted">27 NOV 2026</span></div>
+        <div className="section-head"><div><h2>Infraestrutura</h2><p>Camadas previstas para a operação GXEON</p></div><span className="muted">CORE API: {apiState === "online" ? "ONLINE" : apiState === "checking" ? "VERIFICANDO" : "INDISPONÍVEL"}</span></div>
         <div className="infra-grid">
           {[{n:"Frontend",v:"Vercel",s:"Interface e cockpit",icon:Activity},{n:"Core API",v:"Railway",s:"Runtime de agentes",icon:Server},{n:"Dados e memória",v:"Supabase",s:"PostgreSQL · pgvector",icon:Database}].map((x)=><div className="infra-card" key={x.n}><div className="infra-top"><x.icon size={18}/><span className="tag">ALVO</span></div><small>{x.n}</small><strong>{x.v}</strong><p>{x.s}</p></div>)}
         </div>
