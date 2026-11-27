@@ -1,0 +1,11 @@
+import express from 'express';
+const app=express();app.disable('x-powered-by');app.use(express.json({limit:'256kb'}));
+const port=process.env.PORT||3000;
+const allowed=(process.env.CORS_ORIGIN||'').split(',').map(x=>x.trim()).filter(Boolean);
+app.use((req,res,next)=>{const origin=req.headers.origin;if(origin&&allowed.length&&allowed.includes(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type,X-GXEON-API-KEY');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');}if(req.method==='OPTIONS')return res.sendStatus(204);next();});
+app.get('/health',(_req,res)=>res.json({ok:true,service:'gxeon-core-api',version:'0.1.0',timestamp:new Date().toISOString()}));
+app.get('/v1/status',(_req,res)=>res.json({ok:true,platform:'GXEON',mode:'foundation',databaseConfigured:Boolean(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY),modelRouterConfigured:Boolean(process.env.MODEL_ROUTER_BASE_URL),humanApprovalRequired:true,autonomousFinancialExecution:false}));
+app.use('/v1',(req,res,next)=>{const expected=process.env.GXEON_API_KEY;if(!expected)return res.status(503).json({error:'API not configured: operator key required'});if(req.headers['x-gxeon-api-key']!==expected)return res.status(401).json({error:'unauthorized'});next();});
+app.get('/v1/agents',async(_req,res)=>{if(!process.env.SUPABASE_URL||!process.env.SUPABASE_SERVICE_ROLE_KEY)return res.status(503).json({error:'Supabase adapter not configured'});try{const r=await fetch(process.env.SUPABASE_URL+'/rest/v1/gxeon_agents?select=id,agent_key,display_name,role,status,created_at',{headers:{apikey:process.env.SUPABASE_SERVICE_ROLE_KEY,Authorization:'Bearer '+process.env.SUPABASE_SERVICE_ROLE_KEY}});const body=await r.json();if(!r.ok)return res.status(502).json({error:'database_query_failed'});res.json({agents:body});}catch{res.status(502).json({error:'database_unavailable'});}});
+app.post('/v1/approvals',(_req,res)=>res.status(501).json({error:'approval workflow not enabled; no external action can be executed'}));
+app.listen(port,'0.0.0.0',()=>console.log('GXEON Core API listening on '+port));
